@@ -1,13 +1,17 @@
 package de.campusshop.cw1.repository;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.campusshop.cw1.config.StorageProperties;
+import de.campusshop.cw1.exception.StorageException;
 import de.campusshop.cw1.model.Order;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -44,8 +48,18 @@ public class FileOrderRepository implements OrderRepository {
     /** Initialise the store: create parent dir + empty file if needed, then load existing orders. */
     @PostConstruct
     public void load() {
-        // TODO: implement
-        throw new UnsupportedOperationException("TODO: implement FileOrderRepository.load");
+        try {
+            Files.createDirectories(storagePath.getParent());
+            if (Files.exists(storagePath) == false) {
+                Files.writeString(storagePath, "[]");
+            }
+            List<Order> orders = objectMapper.readValue(storagePath.toFile(), new TypeReference<List<Order>>() {});
+            for (Order order : orders) {
+                ordersById.put(order.orderId(), order);
+            }
+        } catch (IOException e) {
+            throw new StorageException("could not initialise order store at " + storagePath, e);
+        }
     }
 
     @Override
