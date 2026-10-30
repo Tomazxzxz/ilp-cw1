@@ -2,7 +2,10 @@ package de.campusshop.cw1.service;
 
 import de.campusshop.cw1.dto.OrderResponse;
 import de.campusshop.cw1.dto.PartnerOrderRequest;
+import de.campusshop.cw1.exception.DuplicateOrderException;
+import de.campusshop.cw1.exception.OrderNotFoundException;
 import de.campusshop.cw1.mapper.OrderMapper;
+import de.campusshop.cw1.model.Order;
 import de.campusshop.cw1.repository.OrderRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Coordinates order import, lookup and deletion. Business rules (id generation,
@@ -45,31 +50,34 @@ public class OrderService {
      * </ol>
      */
     public OrderResponse importOrder(PartnerOrderRequest request) {
-        // TODO: implement (see §4 of the CW1 spec). Remember the uniqueness check.
-        throw new UnsupportedOperationException("TODO: implement OrderService.importOrder");
+        if (repository.existsByExternalOrderId(request.partnerOrderId()) == true) {
+            throw new DuplicateOrderException(request.partnerOrderId());
+        }
+        String id = UUID.randomUUID().toString();
+        Order order = mapper.toDomain(request,id,clock.instant());
+        repository.save(order);
+        return mapper.toResponse(order);
     }
 
     /** Return all stored orders as response DTOs. */
     public List<OrderResponse> findAll() {
-        // TODO: implement
-        throw new UnsupportedOperationException("TODO: implement OrderService.findAll");
+        return repository.findAll().stream().map(mapper::toResponse).collect(Collectors.toList());
     }
 
     /** Return one order by id, or throw {@code OrderNotFoundException} (maps to {@code 404}). */
     public OrderResponse findById(String orderId) {
-        // TODO: implement
-        throw new UnsupportedOperationException("TODO: implement OrderService.findById");
+        return repository.findById(orderId).map(mapper::toResponse).orElseThrow(() -> new OrderNotFoundException(orderId));
     }
 
     /** Return all orders for a customer (an empty list is valid). */
     public List<OrderResponse> findByCustomerId(String customerId) {
-        // TODO: implement
-        throw new UnsupportedOperationException("TODO: implement OrderService.findByCustomerId");
+        return repository.findByCustomerId(customerId).stream().map(mapper::toResponse).collect(Collectors.toList());
     }
 
     /** Delete an order by id, or throw {@code OrderNotFoundException} if it does not exist. */
     public void deleteById(String orderId) {
-        // TODO: implement
-        throw new UnsupportedOperationException("TODO: implement OrderService.deleteById");
+        if(!repository.deleteById(orderId)) {
+            throw new OrderNotFoundException(orderId);
+        }
     }
 }
