@@ -63,8 +63,13 @@ public class FileOrderRepository implements OrderRepository {
 
     @Override
     public Order save(Order order) {
-        // TODO: implement (and persist to disk)
-        throw new UnsupportedOperationException("TODO: implement FileOrderRepository.save");
+        ordersById.put(order.orderId(),order);
+        try {
+            objectMapper.writeValue(storagePath.toFile(),new ArrayList<>(ordersById.values()));
+        } catch (IOException e) {
+            throw new StorageException("couldn't save order", e);
+        }
+        return order;
     }
 
     @Override
@@ -84,8 +89,16 @@ public class FileOrderRepository implements OrderRepository {
 
     @Override
     public boolean deleteById(String orderId) {
-        // TODO: implement (and persist to disk)
-        throw new UnsupportedOperationException("TODO: implement FileOrderRepository.deleteById");
+        Order removed = ordersById.remove(orderId);
+        if (removed == null) {
+            return false;
+        }
+        try {
+            objectMapper.writeValue(storagePath.toFile(),new ArrayList<>(ordersById.values()));
+        } catch (IOException e) {
+            throw new StorageException("couldn't be deleted", e);
+        }
+        return true;
     }
 
     @Override
