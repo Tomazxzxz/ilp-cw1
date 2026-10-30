@@ -9,14 +9,13 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
+import java.util.stream.Collectors;
 
+import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * JSON-file backed {@link OrderRepository}.
@@ -70,20 +69,17 @@ public class FileOrderRepository implements OrderRepository {
 
     @Override
     public Optional<Order> findById(String orderId) {
-        // TODO: implement
-        throw new UnsupportedOperationException("TODO: implement FileOrderRepository.findById");
+        return Optional.ofNullable(ordersById.get(orderId));
     }
 
     @Override
     public List<Order> findAll() {
-        // TODO: implement
-        throw new UnsupportedOperationException("TODO: implement FileOrderRepository.findAll");
+        return new ArrayList<>(ordersById.values());
     }
 
     @Override
     public List<Order> findByCustomerId(String customerId) {
-        // TODO: implement
-        throw new UnsupportedOperationException("TODO: implement FileOrderRepository.findByCustomerId");
+        return ordersById.values().stream().filter(order -> order.customerId().equals(customerId)).collect(Collectors.toList());
     }
 
     @Override
@@ -94,7 +90,6 @@ public class FileOrderRepository implements OrderRepository {
 
     @Override
     public boolean existsByExternalOrderId(String externalOrderId) {
-        // TODO: return true if any stored order already has this externalOrderId (drives the 409 path)
-        throw new UnsupportedOperationException("TODO: implement FileOrderRepository.existsByExternalOrderId");
+        return ordersById.values().stream().anyMatch(extOrder -> extOrder.externalOrderId().equals(externalOrderId));
     }
 }
