@@ -4,3 +4,6 @@ target/
 *.tar
 data/
 .DS_Store
+ilp_submission_image.tar
+*.zip
+submit/
