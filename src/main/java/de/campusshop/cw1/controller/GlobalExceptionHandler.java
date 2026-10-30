@@ -6,6 +6,7 @@ import de.campusshop.cw1.exception.OrderNotFoundException;
 import de.campusshop.cw1.exception.StorageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -32,10 +33,20 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(OrderNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(OrderNotFoundException ex) {
-        // TODO: return 404 with a stable ErrorResponse
-        throw new UnsupportedOperationException("TODO: implement GlobalExceptionHandler.handleNotFound");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse("ORDER_NOT_FOUND", ex.getMessage()));
+    }
+    @ExceptionHandler(DuplicateOrderException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicates(DuplicateOrderException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse("DUPLICATE_ORDER", ex.getMessage()));
     }
 
-    // TODO: add handlers for validation (400), malformed JSON (400), duplicate (409) and
-    //       unexpected/storage failures (500).
+    @ExceptionHandler ({
+        MethodArgumentNotValidException.class,HttpMessageNotReadableException.class})
+    public ResponseEntity<ErrorResponse> handleBadRequest(Exception ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("BAD_REQUEST", ex.getMessage()));
+    }
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("INTERNAL_ERROR", ex.getMessage()));
+    }
 }
